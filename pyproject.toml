@@ -1,0 +1,23 @@
+[project]
+name = "fakenewsnet"
+version = "0.1.0"
+description = "Fake News Detection Using Propagation Graphs"
+authors = [
+    {name = "Mohammadreza Hosseini"}
+]
+readme = "README.md"
+requires-python = "^3.12"
+dependencies = [
+    "torch (>=2.7.0,<3.0.0)",
+    "torch-geometric (>=2.6.1,<3.0.0)",
+    "numpy (>=2.2.6,<3.0.0)",
+    "pandas (>=2.2.3,<3.0.0)",
+    "scikit-learn (>=1.6.1,<2.0.0)",
+    "matplotlib (>=3.10.3,<4.0.0)",
+    "seaborn (>=0.13.2,<0.14.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
