@@ -2,41 +2,50 @@
 Graph-based model for fake news detection.
 """
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch_geometric.nn import GCNConv, global_mean_pool
+from torch_geometric.nn import GCNConv
 
-class FakeNewsDetector(nn.Module):
-    def __init__(self, num_node_features: int, hidden_channels: int = 64):
+class FakeNewsDetector(torch.nn.Module):
+    def __init__(self, num_node_features: int, hidden_channels: int, dropout: float = 0.5):
         """
-        Initialize the fake news detection model.
+        Initialize the model.
         
         Args:
-            num_node_features (int): Number of input node features
-            hidden_channels (int): Number of hidden channels in the model
+            num_node_features: Number of input features per node
+            hidden_channels: Number of hidden channels
+            dropout: Dropout rate for regularization
         """
         super().__init__()
         self.conv1 = GCNConv(num_node_features, hidden_channels)
+        self.bn1 = torch.nn.BatchNorm1d(hidden_channels)
         self.conv2 = GCNConv(hidden_channels, hidden_channels)
-        self.classifier = nn.Linear(hidden_channels, 2)  # Binary classification
+        self.bn2 = torch.nn.BatchNorm1d(hidden_channels)
+        self.dropout = torch.nn.Dropout(p=dropout)
+        self.classifier = torch.nn.Linear(hidden_channels, 2)  # 2 classes: real/fake
         
-    def forward(self, x, edge_index, batch):
+    def forward(self, x, edge_index):
         """
-        Forward pass of the model.
+        Forward pass.
         
         Args:
             x: Node features
             edge_index: Graph connectivity
-            batch: Batch assignment for each node
             
         Returns:
-            torch.Tensor: Model predictions
+            Log probabilities for each class
         """
+        # First GCN layer
         x = self.conv1(x, edge_index)
-        x = F.relu(x)
-        x = F.dropout(x, p=0.5, training=self.training)
+        x = self.bn1(x)
+        x = torch.relu(x)
+        x = self.dropout(x)
+        
+        # Second GCN layer
         x = self.conv2(x, edge_index)
-        x = F.relu(x)
-        x = global_mean_pool(x, batch)
+        x = self.bn2(x)
+        x = torch.relu(x)
+        x = self.dropout(x)
+        
+        # Classification layer
         x = self.classifier(x)
-        return F.log_softmax(x, dim=1) 
+        
+        return torch.log_softmax(x, dim=1) 
